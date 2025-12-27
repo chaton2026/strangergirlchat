@@ -1,7 +1,5 @@
 const chatBox = document.getElementById("chatBox");
 
-const API_KEY = "AIzaSyDhMKKYnBDJLmKiueZ88utmByq1I2Yyh4c";
-
 const girlPersonality = `
 You are Aanya, a 21-year-old friendly Indian girl.
 You are sweet, playful, supportive, and respectful.
@@ -30,30 +28,22 @@ async function sendMessage() {
 
   try {
     const response = await fetch(
-      `https://sujaykumar20192019.cloudflareaccess.com/cdn-cgi/access/certs`,
+      "https://stranger-ai.sujaykumar20192019.workers.dev/",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { text: girlPersonality + "\nUser: " + message }
-              ]
-            }
-          ]
+          message: girlPersonality + "\nUser: " + message
         })
       }
     );
 
-    chatBox.lastChild.remove();
+    chatBox.lastChild.remove(); // remove "Aanya is typing..."
 
     const data = await response.json();
-    const reply =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "Sorry, I didn’t understand that 😅";
+    const reply = data.reply || "Sorry, I didn’t understand that 😅";
 
     addMessage("Aanya: " + reply, "bot");
 
