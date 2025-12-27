@@ -1,10 +1,13 @@
 const chatBox = document.getElementById("chatBox");
 
+const API_KEY = "AIzaSyDhMKKYnBDJLmKiueZ88utmByq1I2Yyh4c";
+
 const girlPersonality = `
 You are Aanya, a 21-year-old friendly Indian girl.
-You are sweet, playful, and supportive.
+You are sweet, playful, supportive, and respectful.
 Never talk about sex, nudity, or illegal topics.
-Reply in short human-like messages.
+If user asks wrong things, politely change topic.
+Reply in short, natural, human-like messages.
 `;
 
 function addMessage(text, sender) {
@@ -25,22 +28,37 @@ async function sendMessage() {
 
   addMessage("Aanya is typing...", "bot");
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer sk-...FG8A"
-    },
-    body: JSON.stringify({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: girlPersonality },
-        { role: "user", content: message }
-      ]
-    })
-  });
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                { text: girlPersonality + "\nUser: " + message }
+              ]
+            }
+          ]
+        })
+      }
+    );
 
-  chatBox.lastChild.remove();
-  const data = await response.json();
-  addMessage("Aanya: " + data.choices[0].message.content, "bot");
+    chatBox.lastChild.remove();
+
+    const data = await response.json();
+    const reply =
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "Sorry, I didn’t understand that 😅";
+
+    addMessage("Aanya: " + reply, "bot");
+
+  } catch (error) {
+    chatBox.lastChild.remove();
+    addMessage("Aanya: Something went wrong 😔", "bot");
+  }
 }
