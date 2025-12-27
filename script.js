@@ -30,7 +30,7 @@ async function sendMessage() {
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+      `https://sujaykumar20192019.cloudflareaccess.com/cdn-cgi/access/certs`,
       {
         method: "POST",
         headers: {
