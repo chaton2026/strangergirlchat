@@ -24,7 +24,12 @@ async function sendMessage() {
   addMessage("You: " + message, "user");
   input.value = "";
 
-  addMessage("Aanya is typing...", "bot");
+  // Add typing indicator
+  const typingDiv = document.createElement("div");
+  typingDiv.className = "msg bot";
+  typingDiv.innerText = "Aanya is typing...";
+  chatBox.appendChild(typingDiv);
+  chatBox.scrollTop = chatBox.scrollHeight;
 
   try {
     const response = await fetch(
@@ -40,15 +45,37 @@ async function sendMessage() {
       }
     );
 
-    chatBox.lastChild.remove(); // remove "Aanya is typing..."
+    // Remove typing indicator safely
+    if (chatBox.contains(typingDiv)) {
+      chatBox.removeChild(typingDiv);
+    }
 
     const data = await response.json();
-    const reply = data.reply || "Sorry, I didn’t understand that 😅";
+
+    console.log("Worker Response:", data);
+
+    // If backend returned error
+    if (!response.ok) {
+      addMessage("Aanya Error: " + JSON.stringify(data), "bot");
+      return;
+    }
+
+    const reply = data.reply;
+
+    if (!reply) {
+      addMessage("Aanya: Hmm… I didn't get that 🤔", "bot");
+      return;
+    }
 
     addMessage("Aanya: " + reply, "bot");
 
   } catch (error) {
-    chatBox.lastChild.remove();
-    addMessage("Aanya: Something went wrong 😔", "bot");
+    if (chatBox.contains(typingDiv)) {
+      chatBox.removeChild(typingDiv);
+    }
+
+    console.error("Frontend Error:", error);
+
+    addMessage("Frontend Error: " + error.message, "bot");
   }
 }
