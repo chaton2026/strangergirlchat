@@ -33,7 +33,7 @@ async function sendMessage() {
 
   try {
     const response = await fetch(
-      "https://stranger-ai.sujaykumar20192019.workers.dev/",
+      "https://stranger-ai.sujaykumar20192019.workers.dev",
       {
         method: "POST",
         headers: {
