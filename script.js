@@ -33,18 +33,9 @@ async function sendMessage() {
 
   try {
     const response = await fetch(
-      "https://stranger-ai.sujaykumar20192019.workers.dev",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          message: girlPersonality + "\nUser: " + message
-        })
-      }
-    );
-
+  "https://stranger-ai.sujaykumar20192019.workers.dev?message=" +
+  encodeURIComponent(girlPersonality + "\nUser: " + message)
+);
     // Remove typing indicator safely
     if (chatBox.contains(typingDiv)) {
       chatBox.removeChild(typingDiv);
