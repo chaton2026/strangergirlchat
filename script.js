@@ -33,7 +33,7 @@ async function sendMessage() {
 
   try {
     const response = await fetch(
-  "https://stranger-ai.sujaykumar20192019.workers.dev?message=" +
+  "https://strangerchat-public.sujaykumar20192019.workers.dev/?message=" +
   encodeURIComponent(girlPersonality + "\nUser: " + message)
 );
     // Remove typing indicator safely
