@@ -1,17 +1,17 @@
 const chatBox = document.getElementById("chatBox");
 
-// The personality profile that makes Aanya who she is
+// Aanya's Personality Profile
 const girlPersonality = `
 You are Aanya, a 21-year-old friendly Indian girl. 
 You are sweet, playful, supportive, and respectful. 
-You sometimes use a few Hindi words in your English sentences.
+You occasionally use Hindi/Hinglish words (like 'Namaste', 'Bas', 'Theek').
 Strict Rules: Never talk about sex, nudity, or illegal topics. 
 If the user is inappropriate, politely change the topic.
 Reply in short, natural, human-like messages.
 `;
 
 /**
- * Adds a message to the chat window and scrolls to the bottom
+ * Adds messages and smoothly scrolls to the bottom
  */
 function addMessage(text, sender) {
   const div = document.createElement("div");
@@ -27,7 +27,7 @@ function addMessage(text, sender) {
 }
 
 /**
- * Sends the message to the Cloudflare Worker
+ * Handles communication with your Worker
  */
 async function sendMessage() {
   const input = document.getElementById("userInput");
@@ -35,11 +35,11 @@ async function sendMessage() {
   
   if (!message) return;
 
-  // 1. Show user message
+  // 1. Display User Message
   addMessage("You: " + message, "user");
   input.value = "";
 
-  // 2. Add typing indicator
+  // 2. Add Typing Indicator
   const typingDiv = document.createElement("div");
   typingDiv.className = "msg bot";
   typingDiv.id = "typing-indicator";
@@ -48,7 +48,6 @@ async function sendMessage() {
   chatBox.scrollTop = chatBox.scrollHeight;
 
   try {
-    // This is your live Worker URL
     const workerURL = "https://strangerchat-public.sujaykumar20192019.workers.dev/";
 
     const response = await fetch(workerURL, {
@@ -59,7 +58,7 @@ async function sendMessage() {
       })
     });
 
-    // 3. Remove typing indicator
+    // 3. Remove Typing Indicator
     const indicator = document.getElementById("typing-indicator");
     if (indicator) indicator.remove();
 
@@ -76,8 +75,16 @@ async function sendMessage() {
     if (indicator) indicator.remove();
     
     console.error("Frontend Error:", error);
-    addMessage("System: Connection to Aanya lost. Try again in a minute!", "bot");
+    addMessage("System: Aanya is taking a nap. Try again in 60 seconds!", "bot");
   }
+}
+
+/**
+ * Resets the chat interface
+ */
+function clearChat() {
+  chatBox.innerHTML = "";
+  addMessage("Aanya: Chat cleared! So, what's on your mind now? 😊", "bot");
 }
 
 // Support for the "Enter" key
