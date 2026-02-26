@@ -32,10 +32,16 @@ async function sendMessage() {
   chatBox.scrollTop = chatBox.scrollHeight;
 
   try {
-    const response = await fetch(
-  "https://strangerchat-public.sujaykumar20192019.workers.dev/?message=" +
-  encodeURIComponent(girlPersonality + "\nUser: " + message)
-);
+    const response = await fetch("https://strangerchat-public.sujaykumar20192019.workers.dev/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: girlPersonality + "\nUser: " + message
+      })
+    });
+
     // Remove typing indicator safely
     if (chatBox.contains(typingDiv)) {
       chatBox.removeChild(typingDiv);
@@ -43,11 +49,8 @@ async function sendMessage() {
 
     const data = await response.json();
 
-    console.log("Worker Response:", data);
-
-    // If backend returned error
     if (!response.ok) {
-      addMessage("Aanya Error: " + JSON.stringify(data), "bot");
+      addMessage("Aanya Error: " + (data.error || "Server issue"), "bot");
       return;
     }
 
@@ -64,9 +67,7 @@ async function sendMessage() {
     if (chatBox.contains(typingDiv)) {
       chatBox.removeChild(typingDiv);
     }
-
     console.error("Frontend Error:", error);
-
-    addMessage("Frontend Error: " + error.message, "bot");
+    addMessage("System Error: Unable to connect to Aanya.", "bot");
   }
 }
