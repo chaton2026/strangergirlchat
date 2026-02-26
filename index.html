@@ -7,26 +7,22 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div class="container">
         <div class="header">
-            <h2>Stranger Chat</h2>
+            <h2>STRANGER CHAT</h2>
             <h1 id="girlName">Matching...</h1>
             <p id="statusText">Finding a stranger nearby...</p>
-            
-            <button id="newMatchBtn" onclick="pickRandomGirl()">
-                Find New Stranger
-            </button>
+            <button onclick="pickRandomGirl()" id="newMatchBtn">Find New Stranger</button>
         </div>
 
         <div id="chatBox"></div>
 
         <div class="input-area">
             <input type="text" id="userInput" placeholder="Say hi..." autocomplete="off">
-            <button id="sendBtn" onclick="sendMessage()">Send</button>
+            <button onclick="sendMessage()" id="sendBtn">Send</button>
         </div>
     </div>
-
+    
     <script src="script.js"></script>
 </body>
 </html>
