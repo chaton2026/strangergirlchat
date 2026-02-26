@@ -1,50 +1,157 @@
-// Get elements
+// 1. Firebase Configuration - REPLACE WITH YOUR PROJECT DATA
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "your-app.firebaseapp.com",
+    databaseURL: "https://your-app-default-rtdb.firebaseio.com",
+    projectId: "your-app",
+    storageBucket: "your-app.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdef"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// DOM Elements
 const chatBox = document.getElementById("chatBox");
 const girlNameDisplay = document.getElementById("girlName");
 const statusText = document.getElementById("statusText");
 
-// Personalities
+// AI Personas Bank
 const personalities = [
-    {
-        name: "Aanya",
-        prompt: "You are Aanya, a 21-year-old friendly Indian girl. You are sweet and respectful.",
-        greeting: "Namaste! I'm Aanya. I was waiting to talk to you. 😊",
-        color: "#ff79c6"
-    },
-    {
-        name: "Riya",
-        prompt: "You are Riya, a 22-year-old bold and sassy girl. You like to tease the user.",
-        greeting: "Hey! I'm Riya. Hope you're ready for some fun! 😉",
-        color: "#bd93f9"
-    },
-    {
-        name: "Zara",
-        prompt: "You are Zara, a 25-year-old mature and intelligent woman. You give wise advice.",
-        greeting: "Hello. I am Zara. It's a pleasure to meet you.",
-        color: "#8be9fd"
-    }
+    { name: "Aanya", prompt: "You are Aanya, a 21-year-old friendly Indian girl. You are sweet and respectful.", greeting: "Namaste! I'm Aanya. I was waiting to talk to you. 😊", color: "#ff79c6" },
+    { name: "Riya", prompt: "You are Riya, a 22-year-old bold and sassy girl. You like to tease.", greeting: "Hey! I'm Riya. Ready for some fun? 😉", color: "#bd93f9" },
+    { name: "Zara", prompt: "You are Zara, a 25-year-old mature and intelligent woman.", greeting: "Hello. I am Zara. It's a pleasure to meet you.", color: "#8be9fd" }
 ];
 
 let selectedGirl = null;
+let currentRoomId = null;
+let isHumanMatch = false;
+let searchTimer = null;
+let myUserId = "user_" + Math.random().toString(36).substr(2, 9);
 
-// Function to pick a random girl
-function pickRandomGirl() {
+/**
+ * 2. Hybrid Matchmaking Logic
+ */
+function findMatch() {
+    // Reset state
+    isHumanMatch = false;
+    selectedGirl = null;
+    currentRoomId = null;
+    chatBox.innerHTML = "";
+    girlNameDisplay.innerText = "Matching...";
+    girlNameDisplay.style.color = "#ffffff";
+    statusText.innerText = "Searching for a real person...";
+    clearTimeout(searchTimer);
+
+    const waitingRef = db.ref('waiting_room');
+
+    waitingRef.once('value', (snapshot) => {
+        const waitingData = snapshot.val();
+
+        if (waitingData && waitingData.userId !== myUserId) {
+            // CASE 1: FOUND A HUMAN
+            currentRoomId = waitingData.roomId;
+            waitingRef.remove(); // Take them out of the lobby
+            connectToHuman();
+        } else {
+            // CASE 2: NO ONE IS IN LOBBY - CREATE A ROOM AND WAIT
+            currentRoomId = "room_" + Math.random().toString(36).substr(2, 9);
+            waitingRef.set({ roomId: currentRoomId, userId: myUserId });
+
+            // START 10-SECOND TIMER FOR AI FALLBACK
+            searchTimer = setTimeout(() => {
+                if (!isHumanMatch) {
+                    waitingRef.remove(); // Stop waiting for humans
+                    startAISession();
+                }
+            }, 10000); 
+        }
+    });
+
+    // Listen if someone joins the room YOU created
+    db.ref('waiting_room').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data && !isHumanMatch && !selectedGirl) {
+            // If the room data disappears, someone else matched with us!
+            connectToHuman();
+        }
+    });
+}
+
+/**
+ * 3. Human Connection Logic
+ */
+function connectToHuman() {
+    isHumanMatch = true;
+    clearTimeout(searchTimer);
+    girlNameDisplay.innerText = "Stranger (Human)";
+    girlNameDisplay.style.color = "#2ea043";
+    statusText.innerText = "Connected! Say hello.";
+    
+    // Listen for incoming messages in the shared room
+    db.ref('chats/' + currentRoomId).on('child_added', (snapshot) => {
+        const msg = snapshot.val();
+        if (msg.senderId !== myUserId) {
+            addMessage("Stranger: " + msg.text, "bot");
+        }
+    });
+}
+
+/**
+ * 4. AI Fallback Logic
+ */
+function startAISession() {
+    isHumanMatch = false;
     const randomIndex = Math.floor(Math.random() * personalities.length);
     selectedGirl = personalities[randomIndex];
 
-    // Update Header
-    if(girlNameDisplay) {
-        girlNameDisplay.innerText = selectedGirl.name;
-        girlNameDisplay.style.color = selectedGirl.color;
-    }
-    if(statusText) statusText.innerText = "Connected & Online";
+    girlNameDisplay.innerText = selectedGirl.name;
+    girlNameDisplay.style.color = selectedGirl.color;
+    statusText.innerText = "Matched with a stranger";
     
-    // Clear and Greet
-    chatBox.innerHTML = "";
     addMessage(selectedGirl.greeting, "bot");
 }
 
-// Function to show messages
+/**
+ * 5. Sending Messages
+ */
+async function sendMessage() {
+    const input = document.getElementById("userInput");
+    const message = input.value.trim();
+    if (!message) return;
+
+    addMessage("You: " + message, "user");
+    input.value = "";
+
+    if (isHumanMatch) {
+        // Send to Firebase
+        db.ref('chats/' + currentRoomId).push({
+            senderId: myUserId,
+            text: message,
+            timestamp: Date.now()
+        });
+    } else if (selectedGirl) {
+        // Send to Cloudflare AI Worker
+        sendToAI(message);
+    }
+}
+
+async function sendToAI(userMsg) {
+    try {
+        const response = await fetch("https://strangerchat-public.sujaykumar20192019.workers.dev/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: selectedGirl.prompt + "\nUser: " + userMsg })
+        });
+        const data = await response.json();
+        if (data.reply) addMessage(data.reply, "bot");
+    } catch (e) {
+        addMessage("System: AI is currently offline.", "bot");
+    }
+}
+
 function addMessage(text, sender) {
     const div = document.createElement("div");
     div.className = "msg " + sender;
@@ -53,42 +160,8 @@ function addMessage(text, sender) {
     chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
 }
 
-// Function to send message
-async function sendMessage() {
-    const input = document.getElementById("userInput");
-    const message = input.value.trim();
-    
-    if (!message || !selectedGirl) return;
-
-    // Show user message
-    addMessage("You: " + message, "user");
-    input.value = "";
-
-    try {
-        const response = await fetch("https://strangerchat-public.sujaykumar20192019.workers.dev/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                message: selectedGirl.prompt + "\nUser: " + message
-            })
-        });
-
-        const data = await response.json();
-        if (data.reply) {
-            addMessage(data.reply, "bot");
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        addMessage("System: Connection lost. Try again later.", "bot");
-    }
-}
-
-// Trigger random girl when page loads
-window.onload = () => {
-    pickRandomGirl();
-};
-
-// Enter key support
+// Initialization
+window.onload = findMatch;
 document.getElementById("userInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendMessage();
 });
