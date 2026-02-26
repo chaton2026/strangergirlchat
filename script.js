@@ -1,49 +1,65 @@
 const chatBox = document.getElementById("chatBox");
-const charSelect = document.getElementById("charSelect");
+const girlNameDisplay = document.getElementById("girlName");
 const statusText = document.getElementById("statusText");
 
-// 1. The Personality Bank - Define how each girl behaves
-const personalities = {
-    aanya: {
+// 1. The Personality Bank - All possible girls the system can pick
+const personalities = [
+    {
+        name: "Aanya",
         prompt: "You are Aanya, a 21-year-old friendly Indian girl. You are sweet, playful, and respectful. Use a little Hinglish.",
-        greeting: "Aanya: Namaste! I'm Aanya. I was waiting to talk to you. 😊"
+        greeting: "Namaste! I'm Aanya. I was waiting to talk to someone nice like you. 😊",
+        color: "#ff79c6" // Pink
     },
-    riya: {
+    {
+        name: "Riya",
         prompt: "You are Riya, a 22-year-old bold, sassy, and sarcastic girl. You are energetic and like to tease the user.",
-        greeting: "Riya: Hey there! I'm Riya. Hope you're ready for some fun! 😉"
+        greeting: "Hey! I'm Riya. Hope you can keep up with me! 😉",
+        color: "#bd93f9" // Purple
     },
-    zara: {
+    {
+        name: "Zara",
         prompt: "You are Zara, a 25-year-old mature and highly intelligent woman. You give wise advice and are very calm.",
-        greeting: "Zara: Hello. I am Zara. It is a pleasure to meet you. What is on your mind?"
+        greeting: "Hello. I am Zara. It's a pleasure to be matched with you. What's on your mind?",
+        color: "#8be9fd" // Cyan/Blue
     }
-};
+];
 
-// Start with Aanya by default
-let currentPersona = personalities.aanya.prompt;
+let selectedGirl = null;
 
 /**
- * Changes the AI personality when you pick from the dropdown
+ * Picks a random girl from the bank and resets the chat
  */
-function changeCharacter() {
-    const selected = charSelect.value;
-    currentPersona = personalities[selected].prompt;
+function pickRandomGirl() {
+    // Select a random object from the personalities array
+    const randomIndex = Math.floor(Math.random() * personalities.length);
+    selectedGirl = personalities[randomIndex];
+
+    // Update the UI with the new girl's details
+    girlNameDisplay.innerText = selectedGirl.name;
+    girlNameDisplay.style.color = selectedGirl.color;
+    statusText.innerText = "You are now chatting with a stranger";
     
-    // Update the UI status and clear the chat for the new person
-    statusText.innerText = selected.charAt(0).toUpperCase() + selected.slice(1) + " is online";
-    chatBox.innerHTML = ""; 
-    addMessage(personalities[selected].greeting, "bot");
+    // Clear the chat and show the greeting
+    chatBox.innerHTML = "";
+    addMessage(selectedGirl.greeting, "bot");
 }
 
 /**
- * Adds a message bubble and scrolls smoothly
+ * Adds a message bubble and scrolls smoothly to the bottom
  */
 function addMessage(text, sender) {
     const div = document.createElement("div");
     div.className = "msg " + sender;
+    
+    // If it's the bot, we can color the text based on the girl's theme
+    if (sender === "bot") {
+        div.style.borderLeft = `3px solid ${selectedGirl.color}`;
+    }
+    
     div.innerText = text;
     chatBox.appendChild(div);
     
-    // Auto-scroll to the bottom
+    // Auto-scroll to the newest message
     chatBox.scrollTo({
         top: chatBox.scrollHeight,
         behavior: 'smooth'
@@ -51,57 +67,10 @@ function addMessage(text, sender) {
 }
 
 /**
- * Sends message to your Cloudflare Worker
+ * Sends your message to the Cloudflare Worker
  */
 async function sendMessage() {
     const input = document.getElementById("userInput");
     const message = input.value.trim();
     
-    if (!message) return;
-
-    addMessage("You: " + message, "user");
-    input.value = "";
-
-    // Add typing indicator
-    const typingIndicator = document.createElement("div");
-    typingIndicator.className = "msg bot";
-    typingIndicator.id = "typing";
-    typingIndicator.innerText = "Typing...";
-    chatBox.appendChild(typingIndicator);
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    try {
-        const workerURL = "https://strangerchat-public.sujaykumar20192019.workers.dev/";
-
-        const response = await fetch(workerURL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                // This sends the SPECIFIC girl's personality + your message
-                message: currentPersona + "\nUser: " + message
-            })
-        });
-
-        const indicator = document.getElementById("typing");
-        if (indicator) indicator.remove();
-
-        const data = await response.json();
-
-        if (data.reply) {
-            addMessage(data.reply, "bot");
-        } else {
-            addMessage("Aanya: I'm feeling a bit shy, try again? 😅", "bot");
-        }
-
-    } catch (error) {
-        const indicator = document.getElementById("typing");
-        if (indicator) indicator.remove();
-        console.error("Error:", error);
-        addMessage("System: Connection lost. Wait 60s and try again!", "bot");
-    }
-}
-
-// Enter key support
-document.getElementById("userInput").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendMessage();
-});
+    if (!message || !selectedGirl) return;
