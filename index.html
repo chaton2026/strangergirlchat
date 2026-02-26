@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stranger Chat - Multi Character</title>
+    <title>Stranger Chat | Match Randomly</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,26 +11,20 @@
     <div class="container">
         <div class="header">
             <h2>Stranger Chat</h2>
+            <h1 id="girlName">Matching...</h1>
+            <p id="statusText">Finding a stranger nearby...</p>
             
-            <div class="selector-container">
-                <label for="charSelect" style="font-size: 0.7rem; color: #8b949e; display: block; margin-bottom: 5px;">CHOOSE YOUR FRIEND:</label>
-                <select id="charSelect" onchange="changeCharacter()">
-                    <option value="aanya">Aanya (Sweet & Kind)</option>
-                    <option value="riya">Riya (Bold & Sassy)</option>
-                    <option value="zara">Zara (Smart & Mature)</option>
-                </select>
-            </div>
-            
-            <p id="statusText">Aanya is online</p>
+            <button id="newMatchBtn" onclick="pickRandomGirl()" style="margin-top: 10px; padding: 5px 15px; font-size: 0.7rem; background: #30363d; border-radius: 5px;">
+                Find New Stranger
+            </button>
         </div>
 
         <div id="chatBox">
-            <div class="msg bot">Aanya: Namaste! I'm Aanya. I was waiting to talk to you. 😊</div>
-        </div>
+            </div>
 
         <div class="input-area">
-            <input type="text" id="userInput" placeholder="Type a message..." autocomplete="off">
-            <button onclick="sendMessage()">Send</button>
+            <input type="text" id="userInput" placeholder="Say hi..." autocomplete="off">
+            <button id="sendBtn" onclick="sendMessage()">Send</button>
         </div>
     </div>
 
