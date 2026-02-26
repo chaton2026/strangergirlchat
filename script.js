@@ -1,7 +1,9 @@
+// Get elements
 const chatBox = document.getElementById("chatBox");
 const girlNameDisplay = document.getElementById("girlName");
 const statusText = document.getElementById("statusText");
 
+// Personalities
 const personalities = [
     {
         name: "Aanya",
@@ -25,20 +27,24 @@ const personalities = [
 
 let selectedGirl = null;
 
+// Function to pick a random girl
 function pickRandomGirl() {
     const randomIndex = Math.floor(Math.random() * personalities.length);
     selectedGirl = personalities[randomIndex];
 
     // Update Header
-    girlNameDisplay.innerText = selectedGirl.name;
-    girlNameDisplay.style.color = selectedGirl.color;
-    statusText.innerText = "Online now";
+    if(girlNameDisplay) {
+        girlNameDisplay.innerText = selectedGirl.name;
+        girlNameDisplay.style.color = selectedGirl.color;
+    }
+    if(statusText) statusText.innerText = "Connected & Online";
     
     // Clear and Greet
     chatBox.innerHTML = "";
     addMessage(selectedGirl.greeting, "bot");
 }
 
+// Function to show messages
 function addMessage(text, sender) {
     const div = document.createElement("div");
     div.className = "msg " + sender;
@@ -47,11 +53,14 @@ function addMessage(text, sender) {
     chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
 }
 
+// Function to send message
 async function sendMessage() {
     const input = document.getElementById("userInput");
     const message = input.value.trim();
+    
     if (!message || !selectedGirl) return;
 
+    // Show user message
     addMessage("You: " + message, "user");
     input.value = "";
 
@@ -69,15 +78,17 @@ async function sendMessage() {
             addMessage(data.reply, "bot");
         }
     } catch (error) {
+        console.error("Error:", error);
         addMessage("System: Connection lost. Try again later.", "bot");
     }
 }
 
-// THIS IS THE MOST IMPORTANT PART:
+// Trigger random girl when page loads
 window.onload = () => {
     pickRandomGirl();
 };
 
+// Enter key support
 document.getElementById("userInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendMessage();
 });
