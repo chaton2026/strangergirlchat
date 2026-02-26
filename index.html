@@ -3,26 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stranger Chat</title>
+    <title>Stranger Chat | Human & AI</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <div class="container">
         <div class="header">
-            <h2>STRANGER CHAT</h2>
-            <h1 id="girlName">Matching...</h1>
-            <p id="statusText">Finding a stranger nearby...</p>
-            <button onclick="pickRandomGirl()" id="newMatchBtn">Find New Stranger</button>
+            <h2>Stranger Chat</h2>
+            <h1 id="girlName">Searching...</h1>
+            <p id="statusText">Looking for a real person...</p>
+            
+            <button id="newMatchBtn" onclick="findMatch()">Next Stranger</button>
         </div>
 
         <div id="chatBox"></div>
 
         <div class="input-area">
-            <input type="text" id="userInput" placeholder="Say hi..." autocomplete="off">
-            <button onclick="sendMessage()" id="sendBtn">Send</button>
+            <input type="text" id="userInput" placeholder="Say something..." autocomplete="off">
+            <button id="sendBtn" onclick="sendMessage()">Send</button>
         </div>
     </div>
-    
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
     <script src="script.js"></script>
 </body>
 </html>
