@@ -1,6 +1,7 @@
 /**
  * 1. Initialize HTML Elements & Firebase
  */
+// Fix for ReferenceError: Define these before calling findMatch()
 const chatBox = document.getElementById("chatBox");
 const girlNameDisplay = document.getElementById("girlName");
 const statusText = document.getElementById("statusText");
@@ -16,7 +17,7 @@ const firebaseConfig = {
   measurementId: "G-WHR7GL9JE0"
 };
 
-// Initialize Firebase
+// Initialize Firebase only if not already initialized
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -39,10 +40,14 @@ let myUserId = "user_" + Math.random().toString(36).substr(2, 9);
  * 2. Hybrid Matchmaking Logic
  */
 function findMatch() {
-    // Reset state and listeners to prevent double messages
+    // Reset state and listeners to prevent double messages and UI glitches
     isHumanMatch = false;
     selectedGirl = null;
-    if (currentRoomId) db.ref('chats/' + currentRoomId).off();
+    
+    // Clear old chat room listeners
+    if (currentRoomId) {
+        db.ref('chats/' + currentRoomId).off();
+    }
     db.ref('waiting_room').off(); 
     
     currentRoomId = null;
@@ -59,27 +64,29 @@ function findMatch() {
         const waitingData = snapshot.val();
 
         if (waitingData && waitingData.userId !== myUserId) {
-            // CASE 1: FOUND A HUMAN
+            // CASE 1: FOUND A HUMAN ALREADY WAITING
             currentRoomId = waitingData.roomId;
             waitingRef.remove().then(() => {
                 connectToHuman();
             });
         } else {
-            // CASE 2: WE BECOME THE WAITER
+            // CASE 2: NO ONE IN LOBBY - WE BECOME THE WAITER
             currentRoomId = "room_" + Math.random().toString(36).substr(2, 9);
             waitingRef.set({ roomId: currentRoomId, userId: myUserId });
 
+            // Listen if someone else "takes" our room (deletes the entry)
             waitingRef.on('value', (snap) => {
                 if (!snap.exists() && !isHumanMatch && !selectedGirl) {
                     connectToHuman();
                 }
             });
 
-            // 10-SECOND TIMER FOR AI FALLBACK
+            // START 10-SECOND TIMER FOR AI FALLBACK
             searchTimer = setTimeout(() => {
                 if (!isHumanMatch) {
-                    waitingRef.off();
+                    waitingRef.off(); // Stop listening for humans
                     waitingRef.once('value', (finalSnap) => {
+                        // Double check we weren't matched in the last millisecond
                         if (finalSnap.exists() && finalSnap.val().userId === myUserId) {
                             waitingRef.remove();
                             startAISession();
@@ -103,7 +110,7 @@ function connectToHuman() {
     girlNameDisplay.style.color = "#2ea043";
     statusText.innerText = "Connected! Say hello.";
     
-    // Kill old listeners before starting new one
+    // Ensure fresh listener for messages
     db.ref('chats/' + currentRoomId).off(); 
 
     db.ref('chats/' + currentRoomId).on('child_added', (snapshot) => {
@@ -153,28 +160,4 @@ async function sendMessage() {
 
 async function sendToAI(userMsg) {
     try {
-        const response = await fetch("https://strangerchat-public.sujaykumar20192019.workers.dev/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: selectedGirl.prompt + "\nUser: " + userMsg })
-        });
-        const data = await response.json();
-        if (data.reply) addMessage(data.reply, "bot");
-    } catch (e) {
-        addMessage("System: AI is currently offline.", "bot");
-    }
-}
-
-function addMessage(text, sender) {
-    const div = document.createElement("div");
-    div.className = "msg " + sender;
-    div.innerText = text;
-    chatBox.appendChild(div);
-    chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
-}
-
-window.onload = findMatch;
-
-document.getElementById("userInput").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendMessage();
-});
+        const response = await fetch("https://strangerchat-public.sujaykumar201
