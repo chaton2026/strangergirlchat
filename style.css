@@ -1,140 +1,141 @@
-/* 1. Global Reset & Mobile Foundation */
+/* 1. Global Reset & Mobile Lock */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Inter', -apple-system, system-ui, sans-serif;
 }
 
-body {
-    background-color: #0d1117; /* Deep dark background */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    color: #c9d1d9;
-    overflow: hidden; /* Prevents double scrolling on mobile */
-}
-
-/* 2. Main Container - Responsive for Phone & Desktop */
-.container {
+body, html {
+    height: 100%;
     width: 100%;
-    max-width: 500px;
-    height: 100vh; /* Full screen height on mobile */
-    background: #161b22;
+    background-color: #0b0e11; /* Deep dark background */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+    overflow: hidden; /* Prevents the page from bouncing or scrolling out of view */
+}
+
+/* 2. Main Container - The "Adjuster" */
+.container {
     display: flex;
     flex-direction: column;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    height: 100vh; /* Fixed height to match mobile screen perfectly */
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    background: #15191c;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
-@media (min-width: 600px) {
-    .container {
-        height: 85vh; /* Boxed look for desktop */
-        border-radius: 12px;
-        border: 1px solid #30363d;
-    }
-}
-
-/* 3. Random Match Header */
+/* 3. Header Area */
 .header {
-    padding: 20px 15px;
-    background: #0d1117;
+    padding: 15px;
     text-align: center;
-    border-bottom: 1px solid #30363d;
+    background: #1c2126;
+    border-bottom: 1px solid #2d3439;
 }
 
 .header h2 {
-    font-size: 0.85rem;
-    color: #8b949e;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    font-size: 0.8rem;
+    color: #888;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
 }
 
 #girlName {
-    font-size: 1.8rem;
-    margin: 5px 0;
-    transition: color 0.5s ease;
-    text-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    font-size: 1.4rem;
+    margin-bottom: 5px;
 }
 
 #statusText {
-    font-size: 0.75rem;
-    color: #238636; /* Green 'Online' status */
-    font-weight: 500;
+    font-size: 0.85rem;
+    color: #aaa;
+    margin-bottom: 10px;
 }
 
-/* 4. Chat Display Area */
+/* Next Stranger Button */
+#newMatchBtn {
+    background: #2ea043;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#newMatchBtn:hover {
+    background: #3fb950;
+}
+
+/* 4. Chat Area - The "Flexible" part */
 #chatBox {
-    flex: 1;
-    overflow-y: auto;
+    flex: 1; /* This makes the chat box take up all available middle space */
+    overflow-y: auto; /* Allows messages to scroll, but not the whole page */
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    background: radial-gradient(circle at top, #1c2128, #0d1117);
+    background: #0d1117;
 }
 
-/* 5. Message Bubbles */
+/* Message Bubbles */
 .msg {
-    max-width: 85%;
-    padding: 12px 16px;
-    border-radius: 18px;
-    font-size: 15px;
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    font-size: 0.95rem;
     line-height: 1.4;
     word-wrap: break-word;
-    animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 .user {
     align-self: flex-end;
-    background-color: #238636;
-    color: #ffffff;
+    background: #238636;
+    color: white;
     border-bottom-right-radius: 2px;
 }
 
 .bot {
     align-self: flex-start;
-    background-color: #30363d;
-    color: #f0f6fc;
+    background: #30363d;
+    color: #e6edf3;
     border-bottom-left-radius: 2px;
 }
 
-/* 6. Input Area - Sticky at the bottom */
+/* 5. Input Area - Fixed at bottom */
 .input-area {
     padding: 15px;
-    background: #0d1117;
+    background: #1c2126;
     display: flex;
     gap: 10px;
-    border-top: 1px solid #30363d;
+    border-top: 1px solid #2d3439;
 }
 
-input[type="text"] {
+#userInput {
     flex: 1;
     background: #0d1117;
     border: 1px solid #30363d;
-    padding: 12px 18px;
+    padding: 12px 15px;
     border-radius: 25px;
     color: white;
-    font-size: 16px; /* CRITICAL: Stops iOS zoom-in glitch */
     outline: none;
-    transition: border 0.3s;
 }
 
-input[type="text"]:focus {
-    border-color: #58a6ff;
-}
-
-button {
-    background: #238636;
+#sendBtn {
+    background: #2ea043;
     color: white;
     border: none;
-    padding: 0 22px;
+    padding: 0 20px;
     border-radius: 25px;
-    cursor: pointer;
     font-weight: bold;
-    transition: background 0.2
+    cursor: pointer;
+}
+
+/* 6. Z-Index for Ads */
+/* This ensures the Adsterra Social Bar can display over the content */
+#ad-container {
+    position: absolute;
+    z-index: 9999;
+}
