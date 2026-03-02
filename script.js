@@ -1,12 +1,12 @@
-// 1. Firebase Configuration - REPLACE WITH YOUR PROJECT DATA
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "your-app.firebaseapp.com",
-    databaseURL: "https://your-app-default-rtdb.firebaseio.com",
-    projectId: "your-app",
-    storageBucket: "your-app.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef"
+  apiKey: "AIzaSyB5vVD-CBhUz1J6uapnpbw4wJ8BL5MGF1I",
+  authDomain: "strangerchat-1ae52.firebaseapp.com",
+  databaseURL: "https://strangerchat-1ae52-default-rtdb.firebaseio.com",
+  projectId: "strangerchat-1ae52",
+  storageBucket: "strangerchat-1ae52.firebasestorage.app",
+  messagingSenderId: "1070881075346",
+  appId: "1:1070881075346:web:7d30960674893553aa764b",
+  measurementId: "G-WHR7GL9JE0"
 };
 
 // Initialize Firebase
