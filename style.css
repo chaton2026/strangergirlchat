@@ -1,4 +1,3 @@
-/* 1. Global Reset & Mobile Lock */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -8,86 +7,74 @@
 body, html {
     height: 100%;
     width: 100%;
-    background-color: #0b0e11; /* Deep dark background */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0b0e11;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     color: white;
-    overflow: hidden; /* Prevents the page from bouncing or scrolling out of view */
+    overflow: hidden; /* Prevents double scrollbars */
 }
 
-/* 2. Main Container - The "Adjuster" */
 .container {
     display: flex;
     flex-direction: column;
-    height: 100vh; /* Fixed height to match mobile screen perfectly */
+    height: 100dvh; /* Adjusted for mobile browser bars */
     width: 100%;
     max-width: 500px;
     margin: 0 auto;
     background: #15191c;
     position: relative;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
-/* 3. Header Area */
 .header {
-    padding: 15px;
+    padding: 25px 15px 15px 15px; /* Extra top padding for mobile notch/bars */
     text-align: center;
     background: #1c2126;
     border-bottom: 1px solid #2d3439;
 }
 
 .header h2 {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: #888;
     letter-spacing: 2px;
-    margin-bottom: 5px;
+    text-transform: uppercase;
 }
 
 #girlName {
-    font-size: 1.4rem;
-    margin-bottom: 5px;
+    font-size: 1.5rem;
+    margin: 5px 0;
 }
 
 #statusText {
-    font-size: 0.85rem;
-    color: #aaa;
+    font-size: 0.8rem;
+    color: #00ff41; /* Cyber green status */
     margin-bottom: 10px;
 }
 
-/* Next Stranger Button */
 #newMatchBtn {
     background: #2ea043;
     color: white;
     border: none;
-    padding: 8px 20px;
+    padding: 8px 18px;
     border-radius: 20px;
     font-weight: bold;
     cursor: pointer;
-    transition: background 0.3s;
 }
 
-#newMatchBtn:hover {
-    background: #3fb950;
-}
-
-/* 4. Chat Area - The "Flexible" part */
 #chatBox {
-    flex: 1; /* This makes the chat box take up all available middle space */
-    overflow-y: auto; /* Allows messages to scroll, but not the whole page */
-    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
     display: flex;
     flex-direction: column;
     gap: 12px;
     background: #0d1117;
 }
 
-/* Message Bubbles */
 .msg {
-    max-width: 80%;
-    padding: 10px 15px;
-    border-radius: 15px;
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 18px;
     font-size: 0.95rem;
     line-height: 1.4;
-    word-wrap: break-word;
 }
 
 .user {
@@ -104,20 +91,20 @@ body, html {
     border-bottom-left-radius: 2px;
 }
 
-/* 5. Input Area - Fixed at bottom */
 .input-area {
     padding: 15px;
     background: #1c2126;
     display: flex;
     gap: 10px;
     border-top: 1px solid #2d3439;
+    padding-bottom: max(15px, env(safe-area-inset-bottom)); /* Bottom spacing for iPhones */
 }
 
 #userInput {
     flex: 1;
     background: #0d1117;
     border: 1px solid #30363d;
-    padding: 12px 15px;
+    padding: 12px 18px;
     border-radius: 25px;
     color: white;
     outline: none;
@@ -130,12 +117,4 @@ body, html {
     padding: 0 20px;
     border-radius: 25px;
     font-weight: bold;
-    cursor: pointer;
-}
-
-/* 6. Z-Index for Ads */
-/* This ensures the Adsterra Social Bar can display over the content */
-#ad-container {
-    position: absolute;
-    z-index: 9999;
 }
