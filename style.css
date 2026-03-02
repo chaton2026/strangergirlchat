@@ -1,4 +1,4 @@
-/* 1. Global Reset */
+/* 1. Reset and Global Styles */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -9,12 +9,12 @@ body, html {
     height: 100%;
     width: 100%;
     background-color: #0b0e11;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: white;
-    overflow: hidden; /* Prevent page bounce on mobile */
+    overflow: hidden; /* Prevents scrolling the whole page */
 }
 
-/* 2. Layout Container */
+/* 2. Main Mobile Container */
 .container {
     display: flex;
     flex-direction: column;
@@ -24,10 +24,10 @@ body, html {
     margin: 0 auto;
     background: #15191c;
     position: relative;
-    padding-top: env(safe-area-inset-top); /* Padding for notches/status bars */
+    padding-top: env(safe-area-inset-top);
 }
 
-/* 3. Header Section */
+/* 3. Header Styling */
 .header {
     padding: 25px 15px 15px 15px;
     text-align: center;
@@ -45,8 +45,8 @@ body, html {
 
 #girlName {
     font-size: 1.5rem;
-    margin: 5px 0;
     font-weight: bold;
+    margin: 5px 0;
 }
 
 #statusText {
@@ -63,16 +63,11 @@ body, html {
     border-radius: 20px;
     font-weight: bold;
     cursor: pointer;
-    transition: background 0.3s;
 }
 
-#newMatchBtn:hover {
-    background: #3fb950;
-}
-
-/* 4. The Message Window */
+/* 4. Chat and Messages */
 #chatBox {
-    flex: 1; /* Takes up all space between header and footer */
+    flex: 1;
     overflow-y: auto;
     padding: 20px;
     display: flex;
@@ -81,7 +76,6 @@ body, html {
     background: #0d1117;
 }
 
-/* Message Bubbles */
 .msg {
     max-width: 85%;
     padding: 10px 15px;
@@ -94,25 +88,23 @@ body, html {
 .user {
     align-self: flex-end;
     background: #238636;
-    color: white;
     border-bottom-right-radius: 2px;
 }
 
 .bot {
     align-self: flex-start;
     background: #30363d;
-    color: #e6edf3;
     border-bottom-left-radius: 2px;
 }
 
-/* 5. Input Bar */
+/* 5. Bottom Input Bar */
 .input-area {
     padding: 15px;
     background: #1c2126;
     display: flex;
     gap: 10px;
     border-top: 1px solid #2d3439;
-    padding-bottom: max(15px, env(safe-area-inset-bottom)); /* Safe area for iPhones */
+    padding-bottom: max(15px, env(safe-area-inset-bottom));
     flex-shrink: 0;
 }
 
@@ -124,7 +116,7 @@ body, html {
     border-radius: 25px;
     color: white;
     outline: none;
-    font-size: 16px; /* Prevents auto-zoom on mobile safari */
+    font-size: 16px;
 }
 
 #sendBtn {
@@ -137,7 +129,10 @@ body, html {
     cursor: pointer;
 }
 
-/* 6. Z-Index for Social Bar */
-iframe[id^="at-main-ads-"] {
+/* 6. Adsterra Social Bar Z-Index Fix */
+/* Ensures the ad is always on the top-most layer */
+iframe[id^="at-main-ads-"], 
+div[id^="at-"], 
+.at-social-bar {
     z-index: 2147483647 !important;
 }
