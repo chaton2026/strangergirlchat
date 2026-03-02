@@ -5,20 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Stranger Chat | Human & AI</title>
     <link rel="stylesheet" href="style.css">
-    <meta name="theme-color" content="#1a1a1a">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
 
     <div class="container">
         <div class="header">
             <h2>STRANGER CHAT</h2>
-            <h1 id="girlName">Matching...</h1>
-            <p id="statusText">Searching for a real person...</p>
-            
+            <div id="girlName">Matching...</div>
+            <div id="statusText">Searching for a real person...</div>
             <button id="newMatchBtn" onclick="findMatch()">Next Stranger</button>
         </div>
 
         <div id="chatBox"></div>
+
+        <div class="native-ad-container">
+            <script type="text/javascript">
+                atOptions = {
+                    'key' : 'YOUR_NATIVE_BANNER_KEY',
+                    'format' : 'iframe',
+                    'height' : 50,
+                    'width' : 320,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="//www.effectivegatecpm.com/YOUR_KEY/invoke.js"></script>
+        </div>
 
         <div class="input-area">
             <input type="text" id="userInput" placeholder="Say something..." autocomplete="off">
@@ -26,13 +39,8 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
-    <script src="script.js"></script>
-
     <script src="https://pl28827593.effectivegatecpm.com/b5/e2/f1/b5e2f107e685a8f2b151a5bd0346eedf.js"></script>
 
+    <script src="script.js"></script>
 </body>
 </html>
