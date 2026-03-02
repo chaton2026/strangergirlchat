@@ -1,3 +1,10 @@
+/**
+ * 1. Initialize HTML Elements & Firebase
+ */
+const chatBox = document.getElementById("chatBox");
+const girlNameDisplay = document.getElementById("girlName");
+const statusText = document.getElementById("statusText");
+
 const firebaseConfig = {
   apiKey: "AIzaSyB5vVD-CBhUz1J6uapnpbw4wJ8BL5MGF1I",
   authDomain: "strangerchat-1ae52.firebaseapp.com",
@@ -8,6 +15,12 @@ const firebaseConfig = {
   appId: "1:1070881075346:web:7d30960674893553aa764b",
   measurementId: "G-WHR7GL9JE0"
 };
+
+// Initialize Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.database();
 
 // AI Personas Bank
 const personalities = [
@@ -26,18 +39,19 @@ let myUserId = "user_" + Math.random().toString(36).substr(2, 9);
  * 2. Hybrid Matchmaking Logic
  */
 function findMatch() {
-    // Reset state fully
+    // Reset state and listeners to prevent double messages
     isHumanMatch = false;
     selectedGirl = null;
+    if (currentRoomId) db.ref('chats/' + currentRoomId).off();
+    db.ref('waiting_room').off(); 
+    
     currentRoomId = null;
     chatBox.innerHTML = "";
     girlNameDisplay.innerText = "Matching...";
     girlNameDisplay.style.color = "#ffffff";
     statusText.innerText = "Searching for a real person...";
     
-    // Clear any existing timers or listeners
     clearTimeout(searchTimer);
-    db.ref('waiting_room').off(); 
 
     const waitingRef = db.ref('waiting_room');
 
@@ -45,29 +59,27 @@ function findMatch() {
         const waitingData = snapshot.val();
 
         if (waitingData && waitingData.userId !== myUserId) {
-            // CASE 1: FOUND A HUMAN ALREADY WAITING
+            // CASE 1: FOUND A HUMAN
             currentRoomId = waitingData.roomId;
             waitingRef.remove().then(() => {
                 connectToHuman();
             });
         } else {
-            // CASE 2: NO ONE IN LOBBY - WE BECOME THE WAITER
+            // CASE 2: WE BECOME THE WAITER
             currentRoomId = "room_" + Math.random().toString(36).substr(2, 9);
             waitingRef.set({ roomId: currentRoomId, userId: myUserId });
 
-            // Listen if someone else "takes" our room (deletes the entry)
             waitingRef.on('value', (snap) => {
                 if (!snap.exists() && !isHumanMatch && !selectedGirl) {
                     connectToHuman();
                 }
             });
 
-            // START 10-SECOND TIMER FOR AI FALLBACK
+            // 10-SECOND TIMER FOR AI FALLBACK
             searchTimer = setTimeout(() => {
                 if (!isHumanMatch) {
-                    waitingRef.off(); // Stop listening for humans
+                    waitingRef.off();
                     waitingRef.once('value', (finalSnap) => {
-                        // Double check we weren't matched in the last millisecond
                         if (finalSnap.exists() && finalSnap.val().userId === myUserId) {
                             waitingRef.remove();
                             startAISession();
@@ -91,7 +103,9 @@ function connectToHuman() {
     girlNameDisplay.style.color = "#2ea043";
     statusText.innerText = "Connected! Say hello.";
     
-    // Listen for messages
+    // Kill old listeners before starting new one
+    db.ref('chats/' + currentRoomId).off(); 
+
     db.ref('chats/' + currentRoomId).on('child_added', (snapshot) => {
         const msg = snapshot.val();
         if (msg.senderId !== myUserId) {
