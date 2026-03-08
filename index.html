@@ -2,46 +2,155 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stranger Chat | Human & AI</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stranger Girl Chat | Human & AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- THE GLASSMORPHISM CSS --- */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.18);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .chat-window {
+            width: 95%;
+            max-width: 420px;
+            height: 85vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid var(--glass-border);
+            text-align: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            color: white;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--primary-gradient);
+            border-bottom-right-radius: 2px;
+        }
+
+        .message.stranger {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.2);
+            border-bottom-left-radius: 2px;
+        }
+
+        .input-area {
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 10px 15px;
+            color: white;
+            outline: none;
+        }
+
+        button {
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="header">
-            <h2>STRANGER CHAT</h2>
-            <div id="girlName">Matching...</div>
-            <div id="statusText">Searching for a real person...</div>
-
-            <div id="banner-ad-wrapper" style="min-height: 50px; margin: 10px 0; display: flex; justify-content: center;">
-                <script type="text/javascript">
-                    atOptions = {
-                        'key' : '3c5b7543fbf55d98d08f5625426702a8',
-                        'format' : 'iframe',
-                        'height' : 50,
-                        'width' : 320,
-                        'params' : {}
-                    };
-                </script>
-                <script type="text/javascript" src="//www.highperformanceformat.com/3c5b7543fbf55d98d08f5625426702a8/invoke.js"></script>
-            </div>
-
-            <button id="newMatchBtn" onclick="findMatch()">Next Stranger</button>
+    <div class="chat-window">
+        <div class="chat-header">Stranger Girl Chat</div>
+        
+        <div class="messages-container" id="chat-box">
+            <div class="message stranger">Searching for a partner...</div>
+            <div class="message stranger">Connected! Say hi to Zara.</div>
         </div>
 
-        <div id="chatBox"></div>
-
         <div class="input-area">
-            <input type="text" id="userInput" placeholder="Say something..." autocomplete="off">
-            <button id="sendBtn" onclick="sendMessage()">Send</button>
+            <input type="text" id="user-input" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
         </div>
     </div>
 
-    <script data-cfasync="false" src="https://pl28827593.effectivegatecpm.com/b5/e2/f1/b5e2f107e685a8f2b151a5bd0346eedf.js"></script>
+    <script>
+        function sendMessage() {
+            const input = document.getElementById('user-input');
+            const chatBox = document.getElementById('chat-box');
+            
+            if (input.value.trim() !== "") {
+                const msg = document.createElement('div');
+                msg.className = 'message user';
+                msg.innerText = input.value;
+                chatBox.appendChild(msg);
+                input.value = "";
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+    </script>
 
-    <script src="script.js"></script>
 </body>
 </html>
