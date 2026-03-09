@@ -2,39 +2,99 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Stranger Chat</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        /* Basic Dark-Mode Style */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #ff7eb3, #ff758c); height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; }
-        .container { width: 90%; max-width: 400px; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: white; margin-bottom: 5px; }
-        #statusText { text-align: center; color: #fff; font-size: 12px; margin-bottom: 15px; opacity: 0.8; }
-        #chatBox { height: 350px; overflow-y: auto; background: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 15px; display: flex; flex-direction: column; margin-bottom: 15px; }
-        .msg { margin: 5px 0; padding: 10px; border-radius: 10px; max-width: 80%; word-wrap: break-word; font-size: 14px; }
-        .user { align-self: flex-end; background: #6c5ce7; color: white; }
-        .bot { align-self: flex-start; background: rgba(255, 255, 255, 0.3); color: white; }
-        .input-area { display: flex; gap: 10px; }
-        input { flex: 1; padding: 12px; border: none; border-radius: 25px; outline: none; background: rgba(255, 255, 255, 0.3); color: white; }
-        input::placeholder { color: #eee; }
-        button { padding: 10px 20px; border: none; border-radius: 25px; cursor: pointer; background: #6c5ce7; color: white; transition: 0.3s; }
-        button:hover { background: #5849c4; }
-        .next-btn { width: 100%; margin-top: 10px; background: rgba(0,0,0,0.2); }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: #ff7eb3; 
+            height: 100vh; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            overflow: hidden; /* Prevents double scrollbars */
+        }
+        .container { 
+            width: 95%; 
+            max-width: 420px; 
+            height: 92vh; /* Responsive height for mobile */
+            background: rgba(255, 255, 255, 0.2); 
+            backdrop-filter: blur(15px); 
+            border-radius: 25px; 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        h2 { text-align: center; color: white; margin: 5px 0; font-size: 22px; letter-spacing: 1px; }
+        #statusText { text-align: center; color: white; font-size: 12px; margin-bottom: 10px; opacity: 0.9; }
+        
+        #chatBox { 
+            flex: 1; /* Automatically stretches to fill mobile screen */
+            overflow-y: auto; 
+            background: rgba(0, 0, 0, 0.1); 
+            border-radius: 15px; 
+            padding: 15px; 
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .msg { padding: 10px 14px; border-radius: 18px; max-width: 85%; font-size: 15px; word-wrap: break-word; }
+        .user { align-self: flex-end; background: #6c5ce7; color: white; border-bottom-right-radius: 4px; }
+        .bot { align-self: flex-start; background: rgba(255, 255, 255, 0.8); color: #333; border-bottom-left-radius: 4px; }
+        
+        .input-area { display: flex; gap: 8px; padding-bottom: 5px; }
+        input { 
+            flex: 1; 
+            padding: 12px 18px; 
+            border: none; 
+            border-radius: 25px; 
+            background: white; 
+            color: #333; 
+            outline: none; 
+            font-size: 16px; /* Prevents zoom on iPhone */
+        }
+        button#sendBtn { 
+            padding: 10px 18px; 
+            border: none; 
+            border-radius: 25px; 
+            background: #6c5ce7; 
+            color: white; 
+            font-weight: bold; 
+            cursor: pointer;
+        }
+        .next-btn { 
+            width: 100%; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 25px; 
+            background: rgba(0,0,0,0.3); 
+            color: white; 
+            font-weight: bold; 
+            cursor: pointer;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 id="girlName">Chat</h2> <div id="statusText">connecting...</div>
+    <h2 id="girlName">Chat</h2>
+    <div id="statusText">searching...</div>
 
     <div id="chatBox"></div>
 
     <div class="input-area">
-        <input type="text" id="userInput" placeholder="Type a message..." autocomplete="off">
-        <button onclick="sendMessage()">Send</button>
+        <input type="text" id="userInput" placeholder="Say something..." autocomplete="off">
+        <button id="sendBtn" onclick="sendMessage()">Send</button>
     </div>
     
     <button class="next-btn" onclick="findMatch()">Next Stranger</button>
