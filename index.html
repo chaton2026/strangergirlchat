@@ -9,15 +9,13 @@
     
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
         body { 
-            margin: 0; padding: 0; 
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); 
+            margin: 0; padding: 0; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); 
             height: 100vh; display: flex; justify-content: center; align-items: center;
-            overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden; font-family: -apple-system, sans-serif;
         }
 
-        /* --- BUBBLE ANIMATION --- */
+        /* Bubble Animation */
         .bubbles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; }
         .bubble { 
             position: absolute; bottom: -100px; width: 40px; height: 40px; 
@@ -26,62 +24,43 @@
         }
         @keyframes rise {
             0% { bottom: -100px; transform: translateX(0); opacity: 0.5; }
-            50% { transform: translateX(100px); opacity: 0.8; }
-            100% { bottom: 100vh; transform: translateX(-50px); opacity: 0; }
+            50% { transform: translateX(80px); opacity: 0.8; }
+            100% { bottom: 100vh; transform: translateX(-40px); opacity: 0; }
         }
 
         .container { 
             width: 95%; height: 92vh; max-width: 450px; 
-            background: rgba(255, 255, 255, 0.2); 
-            backdrop-filter: blur(15px); 
-            -webkit-backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.3);
-            display: flex; flex-direction: column; padding: 20px;
-            z-index: 10; position: relative;
+            display: flex; flex-direction: column; padding: 20px; z-index: 10; position: relative;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        h2 { text-align: center; color: white; margin: 0; font-size: 24px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        #statusText { text-align: center; color: white; font-size: 12px; margin-bottom: 15px; opacity: 0.9; }
+        h2 { text-align: center; color: white; margin: 0; font-size: 24px; }
+        #statusText { text-align: center; color: white; font-size: 11px; margin-bottom: 15px; opacity: 0.9; }
         
         #chatBox { 
             flex: 1; overflow-y: auto; background: rgba(255, 255, 255, 0.1); 
             border-radius: 20px; padding: 15px; margin-bottom: 15px;
-            display: flex; flex-direction: column; gap: 10px;
+            display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth;
         }
         
-        /* Message Bubbles */
-        .msg { padding: 12px 16px; border-radius: 20px; max-width: 85%; font-size: 15px; line-height: 1.4; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .msg { padding: 12px 16px; border-radius: 20px; max-width: 85%; font-size: 15px; line-height: 1.4; }
         .user { align-self: flex-end; background: #6c5ce7; color: white; border-bottom-right-radius: 4px; }
         .bot { align-self: flex-start; background: white; color: #333; border-bottom-left-radius: 4px; }
         
         .input-area { display: flex; gap: 10px; }
-        input { 
-            flex: 1; padding: 14px 20px; border: none; border-radius: 30px; 
-            background: white; color: #333; outline: none; font-size: 16px; 
-        }
-        button#sendBtn { 
-            width: 50px; height: 50px; border: none; border-radius: 50%; 
-            background: #6c5ce7; color: white; font-size: 18px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
-        }
-        .next-btn { 
-            width: 100%; padding: 12px; border: none; border-radius: 20px; 
-            background: rgba(255, 255, 255, 0.3); color: white; font-weight: bold; 
-            margin-top: 10px; cursor: pointer;
-        }
+        input { flex: 1; padding: 14px 20px; border: none; border-radius: 30px; outline: none; font-size: 16px; }
+        button#sendBtn { width: 50px; height: 50px; border: none; border-radius: 50%; background: #6c5ce7; color: white; font-size: 18px; cursor: pointer; }
+        .next-btn { width: 100%; padding: 12px; border: none; border-radius: 20px; background: rgba(255, 255, 255, 0.3); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
-
     <div class="bubbles">
         <div class="bubble" style="left: 10%; animation-duration: 8s;"></div>
-        <div class="bubble" style="left: 30%; animation-duration: 12s; width: 20px; height: 20px;"></div>
-        <div class="bubble" style="left: 50%; animation-duration: 10s; width: 60px; height: 60px;"></div>
-        <div class="bubble" style="left: 70%; animation-duration: 15s;"></div>
-        <div class="bubble" style="left: 90%; animation-duration: 9s; width: 30px; height: 30px;"></div>
+        <div class="bubble" style="left: 40%; animation-duration: 12s; width: 20px;"></div>
+        <div class="bubble" style="left: 70%; animation-duration: 10s; width: 60px;"></div>
     </div>
-
     <div class="container">
         <h2 id="girlName">Chat</h2>
         <div id="statusText">searching...</div>
@@ -92,7 +71,6 @@
         </div>
         <button class="next-btn" onclick="findMatch()">Next Stranger</button>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
