@@ -17,8 +17,11 @@ const girlNameDisplay = document.getElementById('girlName');
 
 // --- MATCHING LOGIC ---
 function findMatch() {
-    // 1. Cleanup old data
-    if (currentRoomId) db.ref('rooms/' + currentRoomId).off();
+    // Cleanup old room data before finding new match
+    if (currentRoomId && !isAI) {
+        db.ref('rooms/' + currentRoomId).remove(); 
+        db.ref('rooms/' + currentRoomId).off();
+    }
     db.ref('waiting_room/' + userId).remove();
     
     chatBox.innerHTML = '';
@@ -30,29 +33,26 @@ function findMatch() {
 
     const waitingRef = db.ref('waiting_room');
 
-    // 2. Check for waiting users
     waitingRef.once('value', snapshot => {
         const users = snapshot.val();
         let peerId = null;
 
         if (users) {
-            // Find a peer that isn't me
             peerId = Object.keys(users).find(id => id !== userId);
         }
 
         if (peerId) {
-            // JOINER: Connect to the person waiting
-            currentRoomId = "room_" + peerId; // Use the Peer's ID as room name
+            // JOINER MODE
+            currentRoomId = "room_" + peerId;
             waitingRef.child(peerId).remove(); 
             startChat(currentRoomId, "Real Human");
         } else {
-            // HOSTER: Wait for someone to join me
+            // HOSTER MODE
             waitingRef.child(userId).set({ status: "waiting" });
-            waitingRef.child(userId).onDisconnect().remove(); // Remove if tab closes
+            waitingRef.child(userId).onDisconnect().remove();
             
             statusText.innerText = "Waiting for a real person...";
 
-            // Listen for someone to "claim" my room
             db.ref('rooms/room_' + userId).on('child_added', snap => {
                 if (!currentRoomId) {
                     currentRoomId = "room_" + userId;
@@ -79,7 +79,7 @@ function startChat(roomId, name) {
     girlNameDisplay.innerText = name;
     statusText.innerText = "Connected!";
     
-    // Clear and set listener
+    // Listen for new messages
     db.ref('rooms/' + roomId).on('child_added', snapshot => {
         const data = snapshot.val();
         if (data.sender !== userId) {
@@ -87,10 +87,18 @@ function startChat(roomId, name) {
         }
     });
 
+    // Listen for the other person leaving
+    db.ref('rooms/' + roomId).on('value', snapshot => {
+        if (snapshot.val() === null && currentRoomId === roomId && !isAI) {
+            addMessage("Stranger has left the chat.", 'bot');
+            statusText.innerText = "Disconnected";
+            currentRoomId = null;
+        }
+    });
+
     if (isAI) addMessage("hey..", 'bot');
 }
 
-// --- SENDING LOGIC ---
 async function sendMessage() {
     const text = userInput.value.trim();
     if (!text || !currentRoomId) return;
