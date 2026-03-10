@@ -6,7 +6,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let currentRoomId = null;
-let userId = "user_" + Math.floor(Math.random() * 100000);
+let userId = "user_" + Math.floor(Math.random() * 1000000);
 let isAI = false;
 let chatHistory = []; 
 
@@ -15,44 +15,61 @@ const userInput = document.getElementById('userInput');
 const statusText = document.getElementById('statusText');
 const girlNameDisplay = document.getElementById('girlName');
 
-// --- MATCHING LOGIC (Real Human + AI Fallback) ---
+// --- MATCHING LOGIC ---
 function findMatch() {
-    if (currentRoomId) {
-        db.ref('rooms/' + currentRoomId).off(); // Stop listening to old room
-    }
+    // 1. Cleanup old data
+    if (currentRoomId) db.ref('rooms/' + currentRoomId).off();
+    db.ref('waiting_room/' + userId).remove();
     
     chatBox.innerHTML = '';
     chatHistory = [];
-    statusText.innerText = "searching for someone...";
+    isAI = false;
+    currentRoomId = null;
+    statusText.innerText = "Searching for someone...";
     girlNameDisplay.innerText = "Stranger";
 
     const waitingRef = db.ref('waiting_room');
 
+    // 2. Check for waiting users
     waitingRef.once('value', snapshot => {
         const users = snapshot.val();
+        let peerId = null;
+
         if (users) {
-            // Found someone waiting! Connect to them
-            const peerId = Object.keys(users)[0];
-            currentRoomId = peerId + "_" + userId;
-            waitingRef.child(peerId).remove(); // Remove them from waiting
-            startChat(currentRoomId, "Real Stranger");
+            // Find a peer that isn't me
+            peerId = Object.keys(users).find(id => id !== userId);
+        }
+
+        if (peerId) {
+            // JOINER: Connect to the person waiting
+            currentRoomId = "room_" + peerId; // Use the Peer's ID as room name
+            waitingRef.child(peerId).remove(); 
+            startChat(currentRoomId, "Real Human");
         } else {
-            // No one waiting? Join waiting room and set AI timer
-            waitingRef.child(userId).set(true);
-            statusText.innerText = "waiting for a real person...";
+            // HOSTER: Wait for someone to join me
+            waitingRef.child(userId).set({ status: "waiting" });
+            waitingRef.child(userId).onDisconnect().remove(); // Remove if tab closes
             
-            // If no human joins in 5 seconds, connect to AI
+            statusText.innerText = "Waiting for a real person...";
+
+            // Listen for someone to "claim" my room
+            db.ref('rooms/room_' + userId).on('child_added', snap => {
+                if (!currentRoomId) {
+                    currentRoomId = "room_" + userId;
+                    startChat(currentRoomId, "Real Human");
+                }
+            });
+
+            // AI Fallback after 8 seconds
             setTimeout(() => {
-                waitingRef.child(userId).once('value', snap => {
-                    if (snap.exists()) {
-                        waitingRef.child(userId).remove();
-                        isAI = true;
-                        const personas = ["Aanya", "Riya", "Zara"];
-                        const persona = personas[Math.floor(Math.random() * personas.length)];
-                        startChat("ai_" + userId, persona);
-                    }
-                });
-            }, 5000);
+                if (!currentRoomId) {
+                    waitingRef.child(userId).remove();
+                    db.ref('rooms/room_' + userId).off();
+                    isAI = true;
+                    const personas = ["Aanya", "Riya", "Zara"];
+                    startChat("ai_" + userId, personas[Math.floor(Math.random() * 3)]);
+                }
+            }, 8000);
         }
     });
 }
@@ -60,19 +77,17 @@ function findMatch() {
 function startChat(roomId, name) {
     currentRoomId = roomId;
     girlNameDisplay.innerText = name;
-    statusText.innerText = "connected";
+    statusText.innerText = "Connected!";
     
-    if (!isAI) {
-        // Listen for real-time messages from the other device
-        db.ref('rooms/' + currentRoomId).on('child_added', snapshot => {
-            const data = snapshot.val();
-            if (data.sender !== userId) {
-                addMessage(data.text, 'bot');
-            }
-        });
-    } else {
-        addMessage("hey..", 'bot');
-    }
+    // Clear and set listener
+    db.ref('rooms/' + roomId).on('child_added', snapshot => {
+        const data = snapshot.val();
+        if (data.sender !== userId) {
+            addMessage(data.text, 'bot');
+        }
+    });
+
+    if (isAI) addMessage("hey..", 'bot');
 }
 
 // --- SENDING LOGIC ---
@@ -84,13 +99,12 @@ async function sendMessage() {
     userInput.value = '';
 
     if (!isAI) {
-        // Send to Firebase for the other real person
         db.ref('rooms/' + currentRoomId).push({
             sender: userId,
-            text: text
+            text: text,
+            timestamp: Date.now()
         });
     } else {
-        // Send to Cloudflare for the AI
         chatHistory.push({ role: "user", content: text });
         getAIReply(text);
     }
@@ -100,6 +114,7 @@ async function getAIReply(text) {
     try {
         const response = await fetch('https://stranger-chat-ai.sujaykumar20192019.workers.dev/', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: text,
                 persona: girlNameDisplay.innerText,
