@@ -17,7 +17,6 @@
             overflow: hidden; font-family: -apple-system, sans-serif;
         }
 
-        /* Bubble Animation */
         .bubbles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; }
         .bubble { position: absolute; bottom: -100px; width: 40px; height: 40px; background: rgba(255, 255, 255, 0.3); border-radius: 50%; animation: rise 10s infinite ease-in; }
         @keyframes rise {
@@ -27,15 +26,15 @@
         }
 
         .container { 
-            width: 95%; height: 94vh; max-width: 450px; 
+            width: 95%; height: 90vh; max-width: 450px; 
             background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.3);
-            display: flex; flex-direction: column; padding: 20px; z-index: 10; position: relative;
+            display: flex; flex-direction: column; padding: 25px; z-index: 10; position: relative;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        h2 { text-align: center; color: white; margin: 0; font-size: 24px; }
-        #statusText { text-align: center; color: white; font-size: 11px; margin-bottom: 15px; opacity: 0.9; }
+        h2 { text-align: center; color: white; margin-top: 0; margin-bottom: 5px; font-size: 26px; }
+        #statusText { text-align: center; color: white; font-size: 12px; margin-bottom: 20px; opacity: 0.9; }
         
         #chatBox { 
             flex: 1; overflow-y: auto; background: rgba(255, 255, 255, 0.1); 
@@ -47,19 +46,10 @@
         .user { align-self: flex-end; background: #6c5ce7; color: white; border-bottom-right-radius: 4px; }
         .bot { align-self: flex-start; background: white; color: #333; border-bottom-left-radius: 4px; }
         
-        .input-area { display: flex; gap: 10px; }
+        .input-area { display: flex; gap: 10px; margin-bottom: 10px; }
         input { flex: 1; padding: 14px 20px; border: none; border-radius: 30px; outline: none; font-size: 16px; }
         button#sendBtn { width: 50px; height: 50px; border: none; border-radius: 50%; background: #6c5ce7; color: white; font-size: 18px; cursor: pointer; }
-        .next-btn { width: 100%; padding: 12px; border: none; border-radius: 20px; background: rgba(255, 255, 255, 0.3); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
-
-        /* Ad Styling */
-        .ad-bottom-container {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            margin-top: 15px;
-            min-height: 50px;
-        }
+        .next-btn { width: 100%; padding: 14px; border: none; border-radius: 20px; background: rgba(255, 255, 255, 0.3); color: white; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -72,27 +62,15 @@
     <div class="container">
         <h2 id="girlName">Chat</h2>
         <div id="statusText">searching...</div>
+        
         <div id="chatBox"></div>
 
         <div class="input-area">
-            <input type="text" id="userInput" placeholder="say something..." autocomplete="off">
+            <input type="text" id="userInput" placeholder="Type here..." autocomplete="off">
             <button id="sendBtn" onclick="sendMessage()">➤</button>
         </div>
         
         <button class="next-btn" onclick="findMatch()">Next Stranger</button>
-
-        <div class="ad-bottom-container">
-            <script type="text/javascript">
-                atOptions = {
-                    'key' : '3c5b7543fbf55d98d08f5625426702a8',
-                    'format' : 'iframe',
-                    'height' : 50,
-                    'width' : 320,
-                    'params' : {}
-                };
-            </script>
-            <script type="text/javascript" src="https://www.highperformanceformat.com/3c5b7543fbf55d98d08f5625426702a8/invoke.js"></script>
-        </div>
     </div>
 
     <script src="script.js"></script>
