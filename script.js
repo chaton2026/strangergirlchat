@@ -1,158 +1,100 @@
-// 1. ELEMENTS
-const chatBox = document.getElementById("chatBox");
-const girlNameDisplay = document.getElementById("girlName");
-const statusText = document.getElementById("statusText");
-const userInput = document.getElementById("userInput");
-
-// 2. FIREBASE CONFIG 
-// IMPORTANT: Ensure this databaseURL matches your Firebase screenshot exactly!
+// --- CONFIGURATION ---
 const firebaseConfig = {
-  apiKey: "AIzaSyB5vVD-CBhUz1J6uapnpbw4wJ8BL5MGF1I",
-  authDomain: "strangerchat-1ae52.firebaseapp.com",
-  databaseURL: "https://strangerchat-1ae52-default-rtdb.firebaseio.com",
-  projectId: "strangerchat-1ae52",
-  storageBucket: "strangerchat-1ae52.firebasestorage.app",
-  messagingSenderId: "1070881075346",
-  appId: "1:1070881075346:web:7d30960674893553aa764b"
+    databaseURL: "https://strangerchat-1ae52-default-rtdb.firebaseio.com/" 
 };
-
-if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 3. APP STATE
-const personalities = [
-    { id: "Aanya", name: "Aanya", greeting: "namaste... i'm aanya 😊", color: "#ff79c6" },
-    { id: "Riya", name: "Riya", greeting: "yo! riya here 🎮🔥", color: "#bd93f9" },
-    { id: "Zara", name: "Zara", greeting: "heyy, i'm zara! ✨", color: "#ffb86c" }
-];
+let currentPersona = "Aanya";
+let chatHistory = []; // Stores memory for the Advanced AI
 
-let selectedGirl = null;
-let currentRoomId = null;
-let isHumanMatch = false;
-let searchTimer = null;
-let myUserId = "u_" + Math.random().toString(36).substr(2, 5);
+// --- UI ELEMENTS ---
+const chatBox = document.getElementById('chatBox');
+const userInput = document.getElementById('userInput');
+const statusText = document.getElementById('statusText');
+const girlNameDisplay = document.getElementById('girlName');
 
-// 4. MATCHMAKING (The "Transaction" Method)
+// --- MATCHING LOGIC ---
 function findMatch() {
-    isHumanMatch = false;
-    selectedGirl = null;
-    if (currentRoomId) db.ref('chats/' + currentRoomId).off();
-    db.ref('waiting_room').off();
+    chatBox.innerHTML = '';
+    chatHistory = []; // Clear AI memory for the new stranger
+    statusText.innerText = "searching for a stranger...";
     
-    chatBox.innerHTML = "";
-    girlNameDisplay.innerText = "matching...";
-    statusText.innerText = "looking for a real person...";
-    clearTimeout(searchTimer);
+    // Randomly pick a persona
+    const personas = ["Aanya", "Riya", "Zara"];
+    currentPersona = personas[Math.floor(Math.random() * personas.length)];
+    girlNameDisplay.innerText = currentPersona;
 
-    console.log("My User ID:", myUserId);
-    const waitingRef = db.ref('waiting_room');
-
-    // Attempt to claim the room or wait
-    waitingRef.transaction((currentData) => {
-        if (currentData === null) {
-            // Database is empty, I'll be the first waiter
-            return { roomId: "room_" + Math.random().toString(36).substr(2, 5), userId: myUserId };
-        } else if (currentData.userId === myUserId) {
-            return; // Already waiting
-        } else {
-            // Someone else is waiting! I'll take their room ID and clear the waiting room
-            currentRoomId = currentData.roomId;
-            return {}; // This deletes the waiting_room entry
-        }
-    }, (error, committed, snapshot) => {
-        if (error) {
-            console.error("Transaction failed:", error);
-            statusText.innerText = "Connection error. Check Firebase Rules!";
-        } else if (committed && snapshot.exists()) {
-            // I AM THE WAITER (Room created, waiting for someone to delete it)
-            currentRoomId = snapshot.val().roomId;
-            console.log("Waiting in room:", currentRoomId);
-
-            waitingRef.on('value', (snap) => {
-                // If the record is gone, it means another user joined and deleted it!
-                if (!snap.exists() && !isHumanMatch && !selectedGirl) {
-                    console.log("Matched with a human!");
-                    connectToHuman();
-                }
-            });
-
-            // 10 second fallback to AI
-            searchTimer = setTimeout(() => {
-                waitingRef.off();
-                waitingRef.remove();
-                startAISession();
-            }, 10000);
-        } else if (committed && !snapshot.exists()) {
-            // I AM THE JOINER (Matched with someone instantly)
-            console.log("Joined an existing room:", currentRoomId);
-            connectToHuman();
-        }
-    });
+    // Simulate connection delay
+    setTimeout(() => {
+        statusText.innerText = "connected to " + currentPersona;
+        addMessage("hey there..", 'bot');
+    }, 1500);
 }
 
-function connectToHuman() {
-    isHumanMatch = true;
-    clearTimeout(searchTimer);
-    girlNameDisplay.innerText = "Stranger (Human)";
-    girlNameDisplay.style.color = "#2ea043";
-    statusText.innerText = "connected! say hi";
-    
-    db.ref('chats/' + currentRoomId).on('child_added', (snap) => {
-        const msg = snap.val();
-        if (msg.senderId !== myUserId) {
-            addMessage("Stranger: " + msg.text, "bot");
-        }
-    });
-}
-
-// 5. AI FALLBACK
-function startAISession() {
-    isHumanMatch = false;
-    selectedGirl = personalities[Math.floor(Math.random() * personalities.length)];
-    girlNameDisplay.innerText = selectedGirl.name;
-    girlNameDisplay.style.color = selectedGirl.color;
-    statusText.innerText = "matched with a stranger (AI)";
-    addMessage(selectedGirl.greeting, "bot");
-}
-
+// --- MESSAGE HANDLING ---
 async function sendMessage() {
     const text = userInput.value.trim();
     if (!text) return;
 
-    addMessage("You: " + text, "user");
-    userInput.value = "";
+    // 1. Show User Message
+    addMessage(text, 'user');
+    userInput.value = '';
 
-    if (isHumanMatch) {
-        db.ref('chats/' + currentRoomId).push({
-            senderId: myUserId,
-            text: text,
-            timestamp: Date.now()
+    // 2. Add to Memory
+    chatHistory.push({ role: "user", content: text });
+
+    // 3. Show "Typing..." Indicator
+    const typingId = "typing-" + Date.now();
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'msg bot';
+    typingDiv.id = typingId;
+    typingDiv.innerText = '...';
+    chatBox.appendChild(typingDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    try {
+        // 4. Call your Cloudflare Worker
+        const response = await fetch('https://stranger-chat-ai.sujaykumar20192019.workers.dev/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: text,
+                persona: currentPersona,
+                history: chatHistory.slice(-6) // Sends last 6 messages for context
+            })
         });
-    } else if (selectedGirl) {
-        try {
-            // REPLACE THIS URL with your actual Cloudflare Worker URL
-            const res = await fetch("https://strangerchat-public.sujaykumar20192019.workers.dev/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: text, persona: selectedGirl.id })
-            });
-            const data = await res.json();
-            if (data.reply) addMessage(data.reply, "bot");
-        } catch (e) {
-            addMessage("system: zara is a bit shy... try again!", "bot");
-        }
+
+        const data = await response.json();
+        
+        // 5. Remove Typing Indicator and Show AI Reply
+        const typingElement = document.getElementById(typingId);
+        if (typingElement) typingElement.remove();
+        
+        addMessage(data.reply, 'bot');
+
+        // 6. Save AI reply to memory
+        chatHistory.push({ role: "assistant", content: data.reply });
+
+    } catch (error) {
+        const typingElement = document.getElementById(typingId);
+        if (typingElement) typingElement.remove();
+        addMessage("net is slow yaar... say again?", 'bot');
     }
 }
 
-// 6. UI HELPERS
-function addMessage(text, sender) {
-    const div = document.createElement("div");
-    div.className = "msg " + sender;
+function addMessage(text, side) {
+    const div = document.createElement('div');
+    div.className = `msg ${side}`;
     div.innerText = text;
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// 7. INIT
-window.onload = findMatch;
-userInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });
+// Support for Enter key
+userInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendMessage();
+});
+
+// Start the search when the page loads
+findMatch();
