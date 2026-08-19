@@ -120,7 +120,8 @@ async function sendMessage() {
 
 async function getAIReply(text) {
     try {
-        const API_URL = 'https://chatgrow-gss8x7ym2-sujay3.vercel.app/api/ai-reply';
+        // Primary: external worker that's publicly reachable. Falls back locally if reply is unhelpful.
+        const API_URL = 'https://stranger-chat-ai.sujaykumar20192019.workers.dev/';
 
         // Use a short timeout and one retry to avoid long hangs on mobile
         const fetchWithTimeout = (url, opts = {}, timeout = 8000) => {
@@ -153,7 +154,16 @@ async function getAIReply(text) {
             }
         }
         const data = await response.json();
-        addMessage(data.reply, 'bot');
+        // If worker returns the known bad placeholder, produce a nicer fallback reply
+        const rawReply = (data && data.reply) ? String(data.reply) : '';
+        if (/phone|hang/i.test(rawReply) || rawReply.trim().length < 3) {
+            const fallback = buildLocalReply(text, girlNameDisplay.innerText);
+            addMessage(fallback, 'bot');
+            chatHistory.push({ role: "assistant", content: fallback });
+        } else {
+            addMessage(rawReply, 'bot');
+            chatHistory.push({ role: "assistant", content: rawReply });
+        }
         chatHistory.push({ role: "assistant", content: data.reply });
     } catch (e) {
         // Local fallback to avoid showing 'phone hanging'
