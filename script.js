@@ -156,8 +156,27 @@ async function getAIReply(text) {
         addMessage(data.reply, 'bot');
         chatHistory.push({ role: "assistant", content: data.reply });
     } catch (e) {
-        addMessage("net slow...", 'bot');
+        // Local fallback to avoid showing 'phone hanging'
+        const fallback = buildLocalReply(text, girlNameDisplay.innerText);
+        addMessage(fallback, 'bot');
+        chatHistory.push({ role: "assistant", content: fallback });
     }
+}
+
+function buildLocalReply(message, persona) {
+    const m = (message || '').toLowerCase();
+    if (!m) return `Hey, I'm here — what do you want to talk about?`;
+
+    if (m.includes('hi') || m.includes('hello') || m.includes('hey')) {
+        return `Hey! I'm ${persona}. That's great to hear from you 🙂`;
+    }
+
+    if (m.includes('?')) {
+        return `Good question — tell me more about that.`;
+    }
+
+    const short = message.split(/[\.\!\?]/)[0];
+    return `${persona}: I hear you — ${short}. Tell me more.`;
 }
 
 function addMessage(text, side) {
