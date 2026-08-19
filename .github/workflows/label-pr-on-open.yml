@@ -1,0 +1,25 @@
+name: Label PR on open
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label pull request with automerge
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) return;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prNumber = pr.number;
+            const labels = ['automerge'];
+            await github.rest.issues.addLabels({ owner, repo, issue_number: prNumber, labels });
+            core.info(`Added labels ${labels} to PR #${prNumber}`);

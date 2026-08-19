@@ -1,0 +1,47 @@
+name: Auto-merge PR on label
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: startsWith(github.event.label.name, 'automerge')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Merge pull request when labeled
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.info('No pull request payload, exiting');
+              return;
+            }
+            const labelName = context.payload.label && context.payload.label.name;
+            if (!labelName || !labelName.startsWith('automerge')) {
+              core.info(`Label '${labelName}' does not match 'automerge', skipping`);
+              return;
+            }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prNumber = pr.number;
+
+            core.info(`Attempting to merge PR #${prNumber} in ${owner}/${repo}`);
+
+            await github.rest.pulls.merge({
+              owner,
+              repo,
+              pull_number: prNumber,
+              merge_method: 'merge'
+            });
+
+            core.info(`Merged PR #${prNumber}`);
