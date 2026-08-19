@@ -120,7 +120,18 @@ async function sendMessage() {
 
 async function getAIReply(text) {
     try {
-        const response = await fetch('https://stranger-chat-ai.sujaykumar20192019.workers.dev/', {
+        const API_URL = 'https://chatgrow-gss8x7ym2-sujay3.vercel.app/api/ai-reply';
+
+        // Use a short timeout and one retry to avoid long hangs on mobile
+        const fetchWithTimeout = (url, opts = {}, timeout = 8000) => {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            return fetch(url, { ...opts, signal: controller.signal }).finally(() => clearTimeout(id));
+        };
+
+        let response;
+        try {
+            response = await fetchWithTimeout(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -128,7 +139,19 @@ async function getAIReply(text) {
                 persona: girlNameDisplay.innerText,
                 history: chatHistory.slice(-6)
             })
-        });
+            }, 8000);
+        } catch (err) {
+            // Retry once quickly before giving up
+            try {
+                response = await fetchWithTimeout(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, persona: girlNameDisplay.innerText, history: chatHistory.slice(-6) })
+                }, 8000);
+            } catch (err2) {
+                throw err2;
+            }
+        }
         const data = await response.json();
         addMessage(data.reply, 'bot');
         chatHistory.push({ role: "assistant", content: data.reply });
