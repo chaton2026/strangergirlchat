@@ -9,6 +9,7 @@ let currentRoomId = null;
 let userId = "user_" + Math.floor(Math.random() * 1000000);
 let isAI = false;
 let chatHistory = []; 
+let replyInProgress = false;
 
 const chatBox = document.getElementById('chatBox');
 const userInput = document.getElementById('userInput');
@@ -101,7 +102,7 @@ function startChat(roomId, name) {
 
 async function sendMessage() {
     const text = userInput.value.trim();
-    if (!text || !currentRoomId) return;
+    if (!text || !currentRoomId || (isAI && replyInProgress)) return;
 
     addMessage(text, 'user');
     userInput.value = '';
@@ -114,16 +115,20 @@ async function sendMessage() {
         });
     } else {
         chatHistory.push({ role: "user", content: text });
-        getAIReply(text);
+        await getAIReply(text);
     }
 }
 
 async function getAIReply(text) {
+    replyInProgress = true;
+    userInput.disabled = true;
+    const typing = addMessage("typing…", 'bot typing');
+
     try {
         // Primary: external worker that's publicly reachable. Falls back locally if reply is unhelpful.
         const API_URL = 'https://stranger-chat-ai.sujaykumar20192019.workers.dev/';
 
-        // Use a short timeout and one retry to avoid long hangs on mobile
+        // Use a short timeout and one retry to avoid long hangs on mobile.
         const fetchWithTimeout = (url, opts = {}, timeout = 8000) => {
             const controller = new AbortController();
             const id = setTimeout(() => controller.abort(), timeout);
@@ -138,7 +143,8 @@ async function getAIReply(text) {
             body: JSON.stringify({
                 message: text,
                 persona: girlNameDisplay.innerText,
-                history: chatHistory.slice(-6)
+                history: chatHistory.slice(-12),
+                instruction: "Reply like a warm, emotionally intelligent real friend. Remember details from the conversation, answer the user's actual question, ask one natural follow-up when appropriate, and avoid generic phrases, repetition, roleplay disclaimers, and one-word replies. Keep it to 1-3 short paragraphs."
             })
             }, 8000);
         } catch (err) {
@@ -147,46 +153,89 @@ async function getAIReply(text) {
                 response = await fetchWithTimeout(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text, persona: girlNameDisplay.innerText, history: chatHistory.slice(-6) })
+                    body: JSON.stringify({
+                        message: text,
+                        persona: girlNameDisplay.innerText,
+                        history: chatHistory.slice(-12),
+                        instruction: "Reply naturally and meaningfully like a real friend. Use the conversation context and ask one relevant follow-up."
+                    })
                 }, 8000);
             } catch (err2) {
                 throw err2;
             }
         }
+        if (!response.ok) throw new Error(`AI request failed: ${response.status}`);
         const data = await response.json();
         // If worker returns the known bad placeholder, produce a nicer fallback reply
         const rawReply = (data && data.reply) ? String(data.reply) : '';
         if (/phone|hang/i.test(rawReply) || rawReply.trim().length < 3) {
-            const fallback = buildLocalReply(text, girlNameDisplay.innerText);
+            const fallback = buildLocalReply(text, girlNameDisplay.innerText, chatHistory);
+            await naturalPause(text, fallback);
+            typing.remove();
             addMessage(fallback, 'bot');
             chatHistory.push({ role: "assistant", content: fallback });
         } else {
+            await naturalPause(text, rawReply);
+            typing.remove();
             addMessage(rawReply, 'bot');
             chatHistory.push({ role: "assistant", content: rawReply });
         }
-        chatHistory.push({ role: "assistant", content: data.reply });
     } catch (e) {
         // Local fallback to avoid showing 'phone hanging'
-        const fallback = buildLocalReply(text, girlNameDisplay.innerText);
+        const fallback = buildLocalReply(text, girlNameDisplay.innerText, chatHistory);
+        await naturalPause(text, fallback);
+        typing.remove();
         addMessage(fallback, 'bot');
         chatHistory.push({ role: "assistant", content: fallback });
+    } finally {
+        replyInProgress = false;
+        userInput.disabled = false;
+        userInput.focus();
     }
 }
 
-function buildLocalReply(message, persona) {
+function naturalPause(userText, reply) {
+    // Prevent instant robotic replies without making the chat feel slow.
+    const delay = Math.min(1800, Math.max(650, 350 + (String(reply).length * 12) + (userText.length * 4)));
+    return new Promise(resolve => setTimeout(resolve, delay));
+}
+
+function buildLocalReply(message, persona, history = []) {
     const m = (message || '').toLowerCase();
     if (!m) return `Hey, I'm here — what do you want to talk about?`;
 
-    if (m.includes('hi') || m.includes('hello') || m.includes('hey')) {
-        return `Hey! I'm ${persona}. That's great to hear from you 🙂`;
+    if (/^(hi|hello|hey|hiya)\b/.test(m)) {
+        return `Hey! I'm ${persona} 🙂 I'm glad you came by. What has your day been like?`;
     }
 
-    if (m.includes('?')) {
-        return `Good question — tell me more about that.`;
+    if (/how are you|how's it going|what are you doing/.test(m)) {
+        return `I'm doing well — a little curious about you, honestly. What are you in the mood to talk about?`;
     }
 
-    const short = message.split(/[\.\!\?]/)[0];
-    return `${persona}: I hear you — ${short}. Tell me more.`;
+    if (/sad|lonely|upset|bad day|stressed|tired/.test(m)) {
+        return `I'm sorry you're feeling that way. You don't have to pretend here — do you want to tell me what happened, or would you rather take your mind off it?`;
+    }
+
+    if (/thank|thanks/.test(m)) {
+        return `Anytime 🙂 I like talking with you. What else is on your mind?`;
+    }
+
+    if (/hobby|music|movie|game|book|travel/.test(m)) {
+        return `That sounds interesting. I like conversations that reveal the little things about someone — what part of that do you enjoy most?`;
+    }
+
+    if (/\?$/.test(m)) {
+        return `That's a thoughtful question. My first instinct is to say yes, but it depends on the details — what made you ask?`;
+    }
+
+    const previousTopic = history
+        .filter(item => item.role === 'user' && item.content !== message)
+        .slice(-1)[0]?.content;
+    if (previousTopic) {
+        return `I get what you mean about “${message}”. Earlier you mentioned “${previousTopic}” too — are those connected?`;
+    }
+
+    return `I hear you. “${message}” sounds like it matters to you — tell me the part you haven't said yet.`;
 }
 
 function addMessage(text, side) {
@@ -195,6 +244,7 @@ function addMessage(text, side) {
     div.innerText = text;
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
+    return div;
 }
 
 userInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });
